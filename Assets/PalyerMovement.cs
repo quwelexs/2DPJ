@@ -8,6 +8,8 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody2D rb;
     private float moveInput;
 
+    private bool DoubleJump;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -16,11 +18,25 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         moveInput = Input.GetAxisRaw("Horizontal");
-
-        if ((Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.Space)) && Mathf.Abs(rb.linearVelocity.y) < 0.001f)
+        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.Space))
         {
-            rb.AddForce(new Vector2(0f, jumpForce), ForceMode2D.Impulse);
+            if (Mathf.Abs(rb.linearVelocity.y) < 0.001f)
+            {
+                Jump();
+                DoubleJump = true;
+            }
+            else if (DoubleJump)
+            {
+                Jump();
+                DoubleJump = false;
+            }
         }
+    }
+
+    void Jump()
+    {
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+        rb.AddForce(new Vector2(0f, jumpForce), ForceMode2D.Impulse);
     }
 
     void FixedUpdate()
