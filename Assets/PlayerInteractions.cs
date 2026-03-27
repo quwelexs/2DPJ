@@ -3,49 +3,60 @@ using UnityEngine.SceneManagement;
 
 public class PlayerInteractions : MonoBehaviour
 {
-    private int collectedItems = 0;
+    public int lives = 3;
+    private int coins = 0;
+    private Vector2 currentCheckpoint;
 
-    //для об'єктів з istrigger
+    void Start()
+    {
+        currentCheckpoint = transform.position; 
+        GameEvents.OnCoinCollected?.Invoke(coins);
+        GameEvents.OnPlayerDamaged?.Invoke(lives);
+    }
+
     void OnTriggerEnter2D(Collider2D other)
     {
-        //збір предметів
+        //1.монетки
         if (other.CompareTag("Collectible"))
         {
-            collectedItems++;
-            Debug.Log("Зібрано предметів: " + collectedItems);
+            coins++;
+            GameEvents.OnCoinCollected?.Invoke(coins);
             Destroy(other.gameObject);
         }
 
-        //фініш і перехід на наст. рівень
-        if (other.CompareTag("Finish"))
+        //2.чекпоїнт
+        else if (other.CompareTag("Checkpoint"))
         {
-            LoadNextLevel();
+            currentCheckpoint = transform.position;
         }
 
-        //смерть
-        if (other.CompareTag("Hazard1"))
+        //3.шипи або прірва
+        else if (other.CompareTag("Hazard"))
         {
-            RestartLevel();
+            TakeDamage();
+        }
+
+        //4.фініш
+        else if (other.CompareTag("Finish"))
+        {
+            GameEvents.OnLevelFinished?.Invoke();
+            gameObject.SetActive(false);
         }
     }
 
-    void LoadNextLevel()
+    void TakeDamage()
     {
-        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        int nextSceneIndex = currentSceneIndex + 1;
+        lives--;
+        GameEvents.OnPlayerDamaged?.Invoke(lives);
 
-        if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+        if (lives > 0)
         {
-            SceneManager.LoadScene(nextSceneIndex);
+            transform.position = currentCheckpoint;
+            GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
         }
         else
         {
-            SceneManager.LoadScene(0);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
-    }
-
-    void RestartLevel()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }

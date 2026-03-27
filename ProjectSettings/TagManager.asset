@@ -8,6 +8,7 @@ TagManager:
   - Finish1
   - Hazard
   - Hazard1
+  - Checkpoint
   layers:
   - Default
   - TransparentFX
